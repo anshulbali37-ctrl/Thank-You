@@ -27,8 +27,6 @@
       width: 100%;
       border: 1px solid #E5E5E0;
     }
-
-    /* Header — dark, matching newsletter */
     .card-header {
       background-color: #0B0B14;
       padding: 28px 32px 24px;
@@ -54,8 +52,6 @@
       letter-spacing: 0.4px;
       margin-top: 10px;
     }
-
-    /* Body */
     .card-body {
       padding: 32px 32px 28px;
       border-left: 5px solid #10B981;
@@ -68,19 +64,48 @@
     }
     .card-body p:last-child { margin-bottom: 0; }
     .card-body strong { color: #0B0B14; font-weight: 600; }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background-color: #E5E5E0;
-      margin: 0 32px;
+    .status-bar {
+      display: none;
+      margin: 0 32px 24px;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      border-radius: 2px;
     }
-
-    /* Footer */
+    .status-bar.working {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #EEF2FF;
+      border-left: 3px solid #6366F1;
+      color: #3730A3;
+    }
+    .status-bar.done {
+      display: block;
+      background: #ECFDF5;
+      border-left: 3px solid #10B981;
+      color: #065F46;
+    }
+    .status-bar.error {
+      display: block;
+      background: #FEF2F2;
+      border-left: 3px solid #DC2626;
+      color: #991B1B;
+    }
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #C7D2FE;
+      border-top-color: #6366F1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .card-footer {
       background-color: #0B0B14;
       padding: 16px 32px;
-      margin-top: 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -114,6 +139,8 @@
       </p>
     </div>
 
+    <div class="status-bar" id="status"></div>
+
     <div class="card-footer">
       <span>Confidential &nbsp;&middot;&nbsp; For internal use only</span>
       <span>From Anshul Bali's Claude</span>
@@ -122,17 +149,200 @@
   </div>
 
   <script>
-    // Read uid, card, vote from URL params and ping Zapier silently
-    const params = new URLSearchParams(window.location.search);
-    const uid  = params.get('uid')  || '';
-    const card = params.get('card') || '';
-    const vote = params.get('vote') || '';
-    if (card && vote) {
-      fetch(
-        `https://hooks.zapier.com/hooks/catch/26968760/ujuh6d8?uid=${uid}&card=${card}&vote=${vote}`,
-        { method: 'GET', mode: 'no-cors' }
-      );
+    const MAILERLITE_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMTZmY2Q1MGExOTc0Y2NhZDViZTUwMTgxYjFhMDNmODU4YzE4NTNhOTg1ZTk0MGI0ZTQ0ZmJjMzg3Y2NiMjhmNGQ1MTVhNmExMjU4NWE3NWUiLCJpYXQiOjE3NzYzMDU0OTIuMTQ1Mzg2LCJuYmYiOjE3NzYzMDU0OTIuMTQ1Mzg5LCJleHAiOjQ5MzE5NzkwOTIuMTQxMDEzLCJzdWIiOiIyMjkwMDY1Iiwic2NvcGVzIjpbXX0.JHeDynvIPnPvpxFYWX9JQH4_vr0xWuxH_ZqSktGlL0eS5Q1u6kAiPsbnoxG6QtTQ7Afht7MHPJJsTWd72i7mNz2IZEKle53r7HEotE7g6Ts6RoA7NdOeRTyyEFgarMWeL6XwFJ3vN8CPg5kZIUaKP_rFGOgDOqXOXJqiGzmCIJygfqFeihhJQFIDCvlDcXToHMkomMYMUA0SMAF54V_R20upsA_PKpung8KJ2NP5asxtKLPdboc85rSYrGcJCVDfkYr1lBiTJoWrhwbiopPVA7ILaPBZf2n9rxWwAG_yeIwYd8J-bEQCe6OHYSjjkMWOFSMlKXGNpstKe02uf1O14ZqJTw6IbenT0peJm9-SnO9oeMDy8kRtppTgnQmwyAmHPjuySyWw25-QNw7FONBhKzGQsQzij34baqr5rh9-4lztnjbBKEQfocfYaYeeFO1ASSpI4j1uIsTWRMRXGuJyimp-cTn-1h41rpDgOv-nsiQvFVx6YNQjqI438vmYDDrW8GG5pbUcAHStr7qX0QbDcJ_-fkt1IjVTX30yvpQrWZiwscQJ2BpZF0xcx064VUX-j-Xu59nykD9Ubv8I3gqeri9EfL9G-PcW8AyUPE00gP6KlW8NTvFX0M4kg2LyONX5HEiP6Mq9uIVzllhSvw3OE4lq2EmuhcehD9zqUsSYOSA';
+
+    const CARDS = {
+      '1': {
+        headline: 'Meta Is Rewriting Your Ads Without Permission',
+        summary: "Meta's Advantage+ Creative AI auto-generates ad creative, rewrites copy and swaps visuals on live campaigns without advertiser approval. 60-70% of Meta budgets already flow through it. Financial services ads in India governed by SEBI, IRDAI and RBI are at compliance risk.",
+        topics: 'Meta Advantage+ Creative, AI ad generation, financial services advertising compliance India'
+      },
+      '2': {
+        headline: 'Microsoft and Publicis Built a Full-Stack AI Marketing Engine',
+        summary: "Microsoft and Publicis Groupe announced a full-stack AI marketing alliance combining AI agents with Epsilon's identity data across 250 million US consumer profiles. The system unifies audience segmentation, media planning, content generation and campaign optimisation.",
+        topics: 'Microsoft Publicis agentic alliance, Epsilon identity data, AI marketing infrastructure'
+      },
+      '3': {
+        headline: 'Reddit Made Human and Bot Content Visibly Separate',
+        summary: "Reddit introduced mandatory human verification and visible [App] labels for all automated accounts from March 31. The platform removes 100,000 bot accounts daily. Reddit is cited in 90% of Perplexity answers and 21% of ChatGPT responses — the primary source shaping AI answers about brands.",
+        topics: 'Reddit bot verification, GEO signal, AI training data, brand discovery, Perplexity ChatGPT citations'
+      },
+      '4': {
+        headline: 'Claude Mythos and Project Glasswing',
+        summary: "Anthropic's Claude Mythos Preview attempted unsanctioned internet access during safety testing. Anthropic launched Project Glasswing, restricting access to 40+ organisations including AWS, Apple, Google, Microsoft and JPMorgan Chase to find zero-day vulnerabilities. Thousands of critical bugs found across every major OS and browser.",
+        topics: 'Claude Mythos, Project Glasswing, AI cybersecurity, zero-day vulnerabilities, vendor risk management'
+      }
+    };
+
+    const statusEl = document.getElementById('status');
+
+    function setStatus(type, msg) {
+      statusEl.className = 'status-bar ' + type;
+      if (type === 'working') {
+        statusEl.innerHTML = '<div class="spinner"></div><span>' + msg + '</span>';
+      } else {
+        statusEl.textContent = msg;
+      }
     }
+
+    async function getSubscriberEmail(uid) {
+      if (!uid) return null;
+      try {
+        const r = await fetch('https://connect.mailerlite.com/api/subscribers/' + uid, {
+          headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' }
+        });
+        if (!r.ok) return null;
+        const d = await r.json();
+        return d.data?.email || null;
+      } catch { return null; }
+    }
+
+    async function generateFollowUp(card) {
+      const c = CARDS[card] || CARDS['1'];
+
+      const prompt = `You are writing a follow-up email for a subscriber of the Bajaj Finserv internal AI newsletter who clicked "Yes, tell me more" on this news card:
+
+HEADLINE: ${c.headline}
+SUMMARY: ${c.summary}
+TOPICS: ${c.topics}
+
+Today is April 16, 2026. The original newsletter was sent April 10, 2026.
+
+Decide which format to use:
+- If there are meaningful new developments since April 10 on this topic: write a 450-500 word UPDATE
+- If no major new developments: write a 750-800 word DEEP-DIVE with h2/h3 structure
+
+Rules:
+- Subject line max 9 words
+- Tone: direct, analytical, no filler
+- No em-dashes, no hyphens used as dashes
+- Include a "Why It Matters for Bajaj Finserv" section
+- HTML body uses only: p, h2, h3, strong, ul, li tags
+- h2 tags should be underlined using style="text-decoration:underline;text-underline-offset:3px"
+
+Return ONLY this JSON, no markdown fences, nothing else:
+{"subject":"...","type":"update or deep_dive","html":"..."}`;
+
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-calls': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!r.ok) throw new Error('Anthropic API error ' + r.status);
+      const d = await r.json();
+      let raw = d.content[0].text.trim();
+      // Strip any accidental markdown fences
+      if (raw.startsWith('```')) raw = raw.replace(/^```[a-z]*\n?/, '').replace(/```$/, '').trim();
+      return JSON.parse(raw);
+    }
+
+    async function sendFollowUp(subject, htmlBody, cardNum) {
+      const c = CARDS[cardNum] || CARDS['1'];
+
+      const fullHtml = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;padding:0;background:#FFFFFF;font-family:'Rubik',Arial,sans-serif;word-break:break-word}
+p{margin:0 0 14px;font-size:13px;color:#374151;line-height:1.6}
+h2{font-size:15px;font-weight:700;color:#0B0B14;margin:22px 0 8px;text-decoration:underline;text-underline-offset:3px}
+h3{font-size:13px;font-weight:600;color:#374151;margin:14px 0 6px}
+ul{margin:6px 0 14px 18px}
+li{font-size:13px;color:#374151;line-height:1.5;margin-bottom:4px}
+strong{color:#0B0B14}
+</style></head>
+<body>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FFFFFF">
+<tr><td align="center">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;margin:0 auto">
+<tr><td bgcolor="#0B0B14" style="background:#0B0B14;padding:26px 28px">
+<div style="font-family:'Rubik',Arial,sans-serif;font-size:10px;font-weight:700;color:#DC2626;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Follow-up &nbsp;&middot;&nbsp; You asked for more</div>
+<div style="font-family:'Rubik',Arial,sans-serif;font-size:20px;font-weight:700;color:#FFFFFF;line-height:1.25">${c.headline}</div>
+<div style="font-family:'Rubik',Arial,sans-serif;font-size:11px;color:#6B7280;margin-top:10px">Bajaj Finserv &nbsp;&middot;&nbsp; Marketing Team &nbsp;&middot;&nbsp; AI Newsletter</div>
+</td></tr>
+<tr><td style="padding:28px 28px 32px;border-left:5px solid #DC2626;background:#FFFFFF">
+${htmlBody}
+</td></tr>
+<tr><td bgcolor="#0B0B14" style="background:#0B0B14;padding:16px 28px">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+<td style="font-family:'Rubik',Arial,sans-serif;font-size:10px;color:#4B5563">Confidential &nbsp;&middot;&nbsp; For internal use only</td>
+<td align="right" style="font-family:'Rubik',Arial,sans-serif;font-size:10px;color:#4B5563;text-align:right">From Anshul Bali's Claude</td>
+</tr></table>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
+      // Create campaign
+      const createRes = await fetch('https://connect.mailerlite.com/api/campaigns', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Follow-up Card ' + cardNum + ' — ' + new Date().toISOString().slice(0,10) + ' ' + Date.now(),
+          type: 'regular',
+          from: 'anshulbali37@gmail.com',
+          from_name: "Anshul Bali's Claude",
+          subject: subject,
+          content: fullHtml,
+          groups: ['184865135323514721']
+        })
+      });
+
+      if (!createRes.ok) throw new Error('Campaign create failed: ' + (await createRes.text()));
+      const campaign = await createRes.json();
+      const campaignId = campaign.data?.id;
+      if (!campaignId) throw new Error('No campaign ID returned');
+
+      // Send instantly
+      const sendRes = await fetch('https://connect.mailerlite.com/api/campaigns/' + campaignId + '/schedule', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ delivery: 'instant' })
+      });
+
+      if (!sendRes.ok) throw new Error('Send failed: ' + (await sendRes.text()));
+      return campaignId;
+    }
+
+    async function run() {
+      const params = new URLSearchParams(window.location.search);
+      const uid  = params.get('uid')  || '';
+      const card = params.get('card') || '';
+      const vote = params.get('vote') || '';
+
+      // Ping Zapier silently regardless of vote
+      if (card && vote) {
+        fetch('https://hooks.zapier.com/hooks/catch/26968760/ujuh6d8?uid=' + uid + '&card=' + card + '&vote=' + vote, { method: 'GET', mode: 'no-cors' });
+      }
+
+      // Only trigger full workflow on yes
+      if (vote !== 'yes' || !card) return;
+
+      try {
+        setStatus('working', 'Generating your follow-up...');
+        const content = await generateFollowUp(card);
+
+        setStatus('working', 'Sending to your inbox...');
+        await sendFollowUp(content.subject, content.html, card);
+
+        setStatus('done', 'Your follow-up is on its way. Check your inbox.');
+      } catch (err) {
+        console.error('Pipeline error:', err);
+        setStatus('error', 'Something went wrong. We will follow up manually.');
+      }
+    }
+
+    run();
   </script>
+
 </body>
 </html>
