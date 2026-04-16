@@ -185,133 +185,7 @@
       }
     }
 
-    async function getSubscriberEmail(uid) {
-      if (!uid) return null;
-      try {
-        const r = await fetch('https://connect.mailerlite.com/api/subscribers/' + uid, {
-          headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' }
-        });
-        if (!r.ok) return null;
-        const d = await r.json();
-        return d.data?.email || null;
-      } catch { return null; }
-    }
-
-    async function generateFollowUp(card) {
-      const c = CARDS[card] || CARDS['1'];
-
-      const prompt = `You are writing a follow-up email for a subscriber of the Bajaj Finserv internal AI newsletter who clicked "Yes, tell me more" on this news card:
-
-HEADLINE: ${c.headline}
-SUMMARY: ${c.summary}
-TOPICS: ${c.topics}
-
-Today is April 16, 2026. The original newsletter was sent April 10, 2026.
-
-Decide which format to use:
-- If there are meaningful new developments since April 10 on this topic: write a 450-500 word UPDATE
-- If no major new developments: write a 750-800 word DEEP-DIVE with h2/h3 structure
-
-Rules:
-- Subject line max 9 words
-- Tone: direct, analytical, no filler
-- No em-dashes, no hyphens used as dashes
-- Include a "Why It Matters for Bajaj Finserv" section
-- HTML body uses only: p, h2, h3, strong, ul, li tags
-- h2 tags should be underlined using style="text-decoration:underline;text-underline-offset:3px"
-
-Return ONLY this JSON, no markdown fences, nothing else:
-{"subject":"...","type":"update or deep_dive","html":"..."}`;
-
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-calls': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-
-      if (!r.ok) throw new Error('Anthropic API error ' + r.status);
-      const d = await r.json();
-      let raw = d.content[0].text.trim();
-      // Strip any accidental markdown fences
-      if (raw.startsWith('```')) raw = raw.replace(/^```[a-z]*\n?/, '').replace(/```$/, '').trim();
-      return JSON.parse(raw);
-    }
-
-    async function sendFollowUp(subject, htmlBody, cardNum) {
-      const c = CARDS[cardNum] || CARDS['1'];
-
-      const fullHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body{margin:0;padding:0;background:#FFFFFF;font-family:'Rubik',Arial,sans-serif;word-break:break-word}
-p{margin:0 0 14px;font-size:13px;color:#374151;line-height:1.6}
-h2{font-size:15px;font-weight:700;color:#0B0B14;margin:22px 0 8px;text-decoration:underline;text-underline-offset:3px}
-h3{font-size:13px;font-weight:600;color:#374151;margin:14px 0 6px}
-ul{margin:6px 0 14px 18px}
-li{font-size:13px;color:#374151;line-height:1.5;margin-bottom:4px}
-strong{color:#0B0B14}
-</style></head>
-<body>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FFFFFF">
-<tr><td align="center">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;margin:0 auto">
-<tr><td bgcolor="#0B0B14" style="background:#0B0B14;padding:26px 28px">
-<div style="font-family:'Rubik',Arial,sans-serif;font-size:10px;font-weight:700;color:#DC2626;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Follow-up &nbsp;&middot;&nbsp; You asked for more</div>
-<div style="font-family:'Rubik',Arial,sans-serif;font-size:20px;font-weight:700;color:#FFFFFF;line-height:1.25">${c.headline}</div>
-<div style="font-family:'Rubik',Arial,sans-serif;font-size:11px;color:#6B7280;margin-top:10px">Bajaj Finserv &nbsp;&middot;&nbsp; Marketing Team &nbsp;&middot;&nbsp; AI Newsletter</div>
-</td></tr>
-<tr><td style="padding:28px 28px 32px;border-left:5px solid #DC2626;background:#FFFFFF">
-${htmlBody}
-</td></tr>
-<tr><td bgcolor="#0B0B14" style="background:#0B0B14;padding:16px 28px">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-<td style="font-family:'Rubik',Arial,sans-serif;font-size:10px;color:#4B5563">Confidential &nbsp;&middot;&nbsp; For internal use only</td>
-<td align="right" style="font-family:'Rubik',Arial,sans-serif;font-size:10px;color:#4B5563;text-align:right">From Anshul Bali's Claude</td>
-</tr></table>
-</td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
-
-      // Create campaign
-      const createRes = await fetch('https://connect.mailerlite.com/api/campaigns', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'Follow-up Card ' + cardNum + ' — ' + new Date().toISOString().slice(0,10) + ' ' + Date.now(),
-          type: 'regular',
-          from: 'anshulbali37@gmail.com',
-          from_name: "Anshul Bali's Claude",
-          subject: subject,
-          content: fullHtml,
-          groups: ['184865135323514721']
-        })
-      });
-
-      if (!createRes.ok) throw new Error('Campaign create failed: ' + (await createRes.text()));
-      const campaign = await createRes.json();
-      const campaignId = campaign.data?.id;
-      if (!campaignId) throw new Error('No campaign ID returned');
-
-      // Send instantly
-      const sendRes = await fetch('https://connect.mailerlite.com/api/campaigns/' + campaignId + '/schedule', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + MAILERLITE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delivery: 'instant' })
-      });
-
-      if (!sendRes.ok) throw new Error('Send failed: ' + (await sendRes.text()));
-      return campaignId;
-    }
+    const WORKER_URL = 'https://frosty-scene-dad8.anshulbali37.workers.dev/';
 
     async function run() {
       const params = new URLSearchParams(window.location.search);
@@ -329,10 +203,16 @@ ${htmlBody}
 
       try {
         setStatus('working', 'Generating your follow-up...');
-        const content = await generateFollowUp(card);
 
-        setStatus('working', 'Sending to your inbox...');
-        await sendFollowUp(content.subject, content.html, card);
+        const r = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ card, uid })
+        });
+
+        if (!r.ok) throw new Error('Worker error ' + r.status);
+        const data = await r.json();
+        if (!data.ok) throw new Error('Worker returned error');
 
         setStatus('done', 'Your follow-up is on its way. Check your inbox.');
       } catch (err) {
