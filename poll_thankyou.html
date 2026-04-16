@@ -121,5 +121,18 @@
 
   </div>
 
+  <script>
+    // Read uid, card, vote from URL params and ping Zapier silently
+    const params = new URLSearchParams(window.location.search);
+    const uid  = params.get('uid')  || '';
+    const card = params.get('card') || '';
+    const vote = params.get('vote') || '';
+    if (card && vote) {
+      fetch(
+        `https://hooks.zapier.com/hooks/catch/26968760/ujuh6d8?uid=${uid}&card=${card}&vote=${vote}`,
+        { method: 'GET', mode: 'no-cors' }
+      );
+    }
+  </script>
 </body>
 </html>
