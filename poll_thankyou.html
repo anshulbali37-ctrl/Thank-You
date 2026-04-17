@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Got it — Bajaj Finserv AI Newsletter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -27,6 +27,8 @@
       width: 100%;
       border: 1px solid #E5E5E0;
     }
+
+    /* HEADER */
     .card-header {
       background-color: #0B0B14;
       padding: 28px 32px 24px;
@@ -52,18 +54,115 @@
       letter-spacing: 0.4px;
       margin-top: 10px;
     }
+
+    /* CARD BODY */
     .card-body {
-      padding: 32px 32px 28px;
+      padding: 28px 32px 28px;
       border-left: 5px solid #10B981;
     }
-    .card-body p {
+
+    /* INPUT STATE */
+    #state-input { display: block; }
+    #state-working { display: none; }
+    #state-done { display: none; }
+    #state-error { display: none; }
+
+    .intro-text {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.65;
+      margin-bottom: 22px;
+    }
+    .intro-text strong { color: #0B0B14; font-weight: 600; }
+
+    /* THE INPUT BOX — hero element */
+    .input-block {
+      margin-bottom: 20px;
+    }
+    .input-block label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0B0B14;
+      margin-bottom: 8px;
+      letter-spacing: 0.1px;
+    }
+    .input-block textarea {
+      width: 100%;
+      border: 2px solid #D1D5DB;
+      border-radius: 3px;
+      padding: 12px 14px;
+      font-family: 'Rubik', Arial, sans-serif;
+      font-size: 14px;
+      color: #1F2937;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 110px;
+      background: #FAFAFA;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .input-block textarea:focus {
+      border-color: #10B981;
+      background: #FFFFFF;
+    }
+    .input-block textarea::placeholder {
+      color: #9CA3AF;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .input-hint {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-top: 7px;
+      line-height: 1.5;
+    }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%;
+      background: #10B981;
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 24px;
+      font-family: 'Rubik', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 3px;
+      letter-spacing: 0.2px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #059669; }
+    .btn-primary:disabled { background: #D1D5DB; cursor: not-allowed; }
+
+    .btn-skip {
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      font-family: 'Rubik', Arial, sans-serif;
+      font-size: 12px;
+      color: #9CA3AF;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      width: 100%;
+    }
+    .btn-skip:hover { color: #6B7280; }
+
+    /* WORKING STATE */
+    #state-working p {
       font-size: 14px;
       color: #374151;
       line-height: 1.65;
       margin-bottom: 16px;
     }
-    .card-body p:last-child { margin-bottom: 0; }
-    .card-body strong { color: #0B0B14; font-weight: 600; }
+    #state-working p:last-child { margin-bottom: 0; }
+    #state-working strong { color: #0B0B14; font-weight: 600; }
+
+    /* STATUS BAR */
     .status-bar {
       display: none;
       margin: 0 32px 24px;
@@ -103,6 +202,18 @@
       flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* DONE / ERROR STATES */
+    #state-done p, #state-error p {
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+    #state-done p:last-child, #state-error p:last-child { margin-bottom: 0; }
+    #state-done strong, #state-error strong { color: #0B0B14; font-weight: 600; }
+
+    /* FOOTER */
     .card-footer {
       background-color: #0B0B14;
       padding: 16px 32px;
@@ -122,21 +233,55 @@
   <div class="card">
 
     <div class="card-header">
-      <div class="label">Response recorded</div>
-      <h1>We've noted your interest.</h1>
-      <div class="meta">Bajaj Finserv &nbsp;&middot;&nbsp; Marketing Team &nbsp;&middot;&nbsp; AI Newsletter</div>
+      <div class="label">You asked for more</div>
+      <h1>Tell us exactly what you want to know.</h1>
+      <div style="font-size:12px;color:#6B7280;margin-top:8px;line-height:1.4;" id="card-topic"></div>
+      <div class="meta" style="margin-top:8px;">Bajaj Finserv &nbsp;&middot;&nbsp; Marketing Team &nbsp;&middot;&nbsp; AI Newsletter</div>
     </div>
 
     <div class="card-body">
-      <p>
-        Your signal has been captured. We know which story caught your attention, and we are already working on a more detailed breakdown tailored to what you flagged.
-      </p>
-      <p>
-        <strong>Expect a follow-up in your inbox shortly</strong> — either a concise update if something new has emerged on this topic, or a deeper analytical brief if the story warrants a closer look.
-      </p>
-      <p>
-        You do not need to do anything else. Close this tab and watch your inbox.
-      </p>
+
+      <!-- STATE: INPUT -->
+      <div id="state-input">
+        <p class="intro-text">
+          We will generate a <strong>personalised blog</strong> and send it to your inbox. It will be written fresh, not a repeat of the newsletter. Tell us exactly what you want and Claude will write it that way.
+        </p>
+
+        <div class="input-block">
+          <label for="user-input">What do you want the blog to cover?</label>
+          <textarea
+            id="user-input"
+            placeholder="Type your exact question or request here. For example:
+
+- What specific steps should I take before September to migrate my DSA campaigns?
+- Explain how AI Max bidding actually works under the hood
+- What does this mean for a team managing 50+ campaigns across financial products?"
+            maxlength="800"
+          ></textarea>
+          <p class="input-hint">Be as specific as you like. The more context you give, the more tailored the blog will be. Claude will write it exactly to your request.</p>
+        </div>
+
+        <button class="btn-primary" id="btn-submit" onclick="handleSubmit()">Generate my personalised blog</button>
+        <button class="btn-skip" onclick="handleSkip()">Skip and send a general deep-dive instead</button>
+      </div>
+
+      <!-- STATE: WORKING -->
+      <div id="state-working">
+        <p>Your request has been sent to Claude.</p>
+        <p><strong>Generating your blog now.</strong> This takes 20 to 30 seconds. Close this tab and watch your inbox.</p>
+      </div>
+
+      <!-- STATE: DONE -->
+      <div id="state-done">
+        <p>Your signal has been captured. We know which story caught your attention, and we are already working on a more detailed breakdown tailored to what you flagged.</p>
+        <p><strong>Expect a follow-up in your inbox shortly.</strong> Close this tab and watch your inbox.</p>
+      </div>
+
+      <!-- STATE: ERROR -->
+      <div id="state-error">
+        <p>Something went wrong on our end. We have noted your interest and will follow up manually.</p>
+      </div>
+
     </div>
 
     <div class="status-bar" id="status"></div>
@@ -149,29 +294,12 @@
   </div>
 
   <script>
-    const MAILERLITE_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMTZmY2Q1MGExOTc0Y2NhZDViZTUwMTgxYjFhMDNmODU4YzE4NTNhOTg1ZTk0MGI0ZTQ0ZmJjMzg3Y2NiMjhmNGQ1MTVhNmExMjU4NWE3NWUiLCJpYXQiOjE3NzYzMDU0OTIuMTQ1Mzg2LCJuYmYiOjE3NzYzMDU0OTIuMTQ1Mzg5LCJleHAiOjQ5MzE5NzkwOTIuMTQxMDEzLCJzdWIiOiIyMjkwMDY1Iiwic2NvcGVzIjpbXX0.JHeDynvIPnPvpxFYWX9JQH4_vr0xWuxH_ZqSktGlL0eS5Q1u6kAiPsbnoxG6QtTQ7Afht7MHPJJsTWd72i7mNz2IZEKle53r7HEotE7g6Ts6RoA7NdOeRTyyEFgarMWeL6XwFJ3vN8CPg5kZIUaKP_rFGOgDOqXOXJqiGzmCIJygfqFeihhJQFIDCvlDcXToHMkomMYMUA0SMAF54V_R20upsA_PKpung8KJ2NP5asxtKLPdboc85rSYrGcJCVDfkYr1lBiTJoWrhwbiopPVA7ILaPBZf2n9rxWwAG_yeIwYd8J-bEQCe6OHYSjjkMWOFSMlKXGNpstKe02uf1O14ZqJTw6IbenT0peJm9-SnO9oeMDy8kRtppTgnQmwyAmHPjuySyWw25-QNw7FONBhKzGQsQzij34baqr5rh9-4lztnjbBKEQfocfYaYeeFO1ASSpI4j1uIsTWRMRXGuJyimp-cTn-1h41rpDgOv-nsiQvFVx6YNQjqI438vmYDDrW8GG5pbUcAHStr7qX0QbDcJ_-fkt1IjVTX30yvpQrWZiwscQJ2BpZF0xcx064VUX-j-Xu59nykD9Ubv8I3gqeri9EfL9G-PcW8AyUPE00gP6KlW8NTvFX0M4kg2LyONX5HEiP6Mq9uIVzllhSvw3OE4lq2EmuhcehD9zqUsSYOSA';
+    const WORKER_URL = 'https://frosty-scene-dad8.anshulbali37.workers.dev/';
 
-    const CARDS = {
-      '1': {
-        headline: 'Meta Is Rewriting Your Ads Without Permission',
-        summary: "Meta's Advantage+ Creative AI auto-generates ad creative, rewrites copy and swaps visuals on live campaigns without advertiser approval. 60-70% of Meta budgets already flow through it. Financial services ads in India governed by SEBI, IRDAI and RBI are at compliance risk.",
-        topics: 'Meta Advantage+ Creative, AI ad generation, financial services advertising compliance India'
-      },
-      '2': {
-        headline: 'Microsoft and Publicis Built a Full-Stack AI Marketing Engine',
-        summary: "Microsoft and Publicis Groupe announced a full-stack AI marketing alliance combining AI agents with Epsilon's identity data across 250 million US consumer profiles. The system unifies audience segmentation, media planning, content generation and campaign optimisation.",
-        topics: 'Microsoft Publicis agentic alliance, Epsilon identity data, AI marketing infrastructure'
-      },
-      '3': {
-        headline: 'Reddit Made Human and Bot Content Visibly Separate',
-        summary: "Reddit introduced mandatory human verification and visible [App] labels for all automated accounts from March 31. The platform removes 100,000 bot accounts daily. Reddit is cited in 90% of Perplexity answers and 21% of ChatGPT responses — the primary source shaping AI answers about brands.",
-        topics: 'Reddit bot verification, GEO signal, AI training data, brand discovery, Perplexity ChatGPT citations'
-      },
-      '4': {
-        headline: 'Claude Mythos and Project Glasswing',
-        summary: "Anthropic's Claude Mythos Preview attempted unsanctioned internet access during safety testing. Anthropic launched Project Glasswing, restricting access to 40+ organisations including AWS, Apple, Google, Microsoft and JPMorgan Chase to find zero-day vulnerabilities. Thousands of critical bugs found across every major OS and browser.",
-        topics: 'Claude Mythos, Project Glasswing, AI cybersecurity, zero-day vulnerabilities, vendor risk management'
-      }
+    const CARD_HEADLINES = {
+      '1': 'Google Is Killing Dynamic Search Ads. Your Campaigns Migrate to AI Max in September.',
+      '2': 'OpenAI Acquired a Personal Finance Startup. ChatGPT Is Building Toward Being a Financial Advisor.',
+      '3': 'Google Launched Gemini Personal Intelligence in India. It Now Reads Your Customers Inbox.'
     };
 
     const statusEl = document.getElementById('status');
@@ -185,43 +313,74 @@
       }
     }
 
-    const WORKER_URL = 'https://frosty-scene-dad8.anshulbali37.workers.dev/';
+    function showState(name) {
+      ['input','working','done','error'].forEach(function(s) {
+        document.getElementById('state-' + s).style.display = (s === name) ? 'block' : 'none';
+      });
+    }
 
-    async function run() {
+    async function trigger(userInput) {
       const params = new URLSearchParams(window.location.search);
       const uid  = params.get('uid')  || '';
-      const card = params.get('card') || '';
+      const card = params.get('card') || '1';
       const vote = params.get('vote') || '';
 
-      // Ping Zapier silently regardless of vote
+      // Ping Zapier silently
       if (card && vote) {
         fetch('https://hooks.zapier.com/hooks/catch/26968760/ujuh6d8?uid=' + uid + '&card=' + card + '&vote=' + vote, { method: 'GET', mode: 'no-cors' });
       }
 
-      // Only trigger full workflow on yes
-      if (vote !== 'yes' || !card) return;
+      showState('working');
+      setStatus('working', 'Claude is writing your blog...');
 
       try {
-        setStatus('working', 'Generating your follow-up...');
-
         const r = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ card, uid })
+          body: JSON.stringify({ card: card, uid: uid, userInput: userInput })
         });
 
         if (!r.ok) throw new Error('Worker error ' + r.status);
         const data = await r.json();
         if (!data.ok) throw new Error('Worker returned error');
 
-        setStatus('done', 'Your follow-up is on its way. Check your inbox.');
-      } catch (err) {
+        showState('done');
+        setStatus('done', 'Your blog is on its way. Check your inbox.');
+      } catch(err) {
         console.error('Pipeline error:', err);
+        showState('error');
         setStatus('error', 'Something went wrong. We will follow up manually.');
       }
     }
 
-    run();
+    function handleSubmit() {
+      const input = document.getElementById('user-input').value.trim();
+      document.getElementById('btn-submit').disabled = true;
+      trigger(input);
+    }
+
+    function handleSkip() {
+      trigger('');
+    }
+
+    window.onload = function() {
+      const params = new URLSearchParams(window.location.search);
+      const card = params.get('card') || '1';
+      const vote = params.get('vote') || '';
+
+      // Update sub-label with card topic
+      if (CARD_HEADLINES[card]) {
+        document.getElementById('card-topic').textContent = CARD_HEADLINES[card];
+      }
+
+      if (vote === 'no') {
+        // Explicit no vote — just confirm we noted it
+        showState('done');
+      } else {
+        // vote=yes OR no params (preview/direct open) — show input box
+        showState('input');
+      }
+    };
   </script>
 
 </body>
