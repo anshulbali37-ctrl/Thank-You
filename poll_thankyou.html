@@ -48,9 +48,7 @@
       <div style="font-size:12px;color:#6B7280;margin-top:8px;line-height:1.4;" id="card-topic"></div>
       <div class="meta" style="margin-top:8px;">Bajaj Finserv &nbsp;&middot;&nbsp; Marketing Team &nbsp;&middot;&nbsp; AI Newsletter</div>
     </div>
-
     <div class="card-body">
-
       <!-- STATE: INPUT -->
       <div id="state-input">
         <p class="intro-text">We will write a <strong>personalised deep-dive</strong> and send it to your inbox. Be specific. The more context you give, the sharper the output.</p>
@@ -64,33 +62,26 @@
         <button class="btn-primary" id="btn-submit" onclick="handleSubmit()">Send Me a Personalised Report</button>
         <button class="btn-skip" onclick="handleSkip()">Skip and send a general deep-dive instead</button>
       </div>
-
       <!-- STATE: WORKING -->
       <div id="state-working">
         <p><strong>Request sent.</strong> Your report is being written now.</p>
         <p>Takes 20 to 30 seconds. Close this tab and watch your inbox.</p>
       </div>
-
       <!-- STATE: DONE -->
       <div id="state-done">
         <p><strong>On its way.</strong> Check your inbox shortly.</p>
       </div>
-
       <!-- STATE: ERROR -->
       <div id="state-error">
         <p>Something went wrong. We will follow up manually.</p>
       </div>
-
     </div>
-
     <div class="status-bar" id="status"></div>
-
     <div class="card-footer">
       <span>Confidential &nbsp;&middot;&nbsp; For internal use only</span>
       <span>From Anshul Bali's Claude</span>
     </div>
   </div>
-
   <script>
     const WORKER_URL = 'https://frosty-scene-dad8.anshulbali37.workers.dev/';
     const statusEl = document.getElementById('status');
@@ -112,6 +103,7 @@
       const uid  = params.get('uid')  || '';
       const card = params.get('card') || '1';
       const vote = params.get('vote') || '';
+      const headline = params.get('headline') || '';
       if (card && vote) {
         fetch('https://hooks.zapier.com/hooks/catch/26968760/ujuh6d8?uid=' + uid + '&card=' + card + '&vote=' + vote, { method: 'GET', mode: 'no-cors' });
       }
@@ -121,7 +113,7 @@
         const r = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ card: card, uid: uid, userInput: userInput })
+          body: JSON.stringify({ card: card, uid: uid, headline: headline, userInput: userInput })
         });
         if (!r.ok) throw new Error('Worker error ' + r.status);
         const data = await r.json();
